@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成绩·考场查询门户</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231d4e6e'/%3E%3Cpath d='M16 44V24l16-9 16 9v20h-7V27l-9-5-9 5v17z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16283a; --muted:#5a7182; --soft:#8aa0b2; --line:#e3ecf3;
+  --navy:#1d4e6e; --teal:#0e8a80; --teal-l:#e0f2f1;
+  --amber:#c7761a; --amber-l:#f8edd9;
+  --card:#ffffff;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+  color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 480px at 88% -8%, rgba(14,138,128,.11), transparent 60%),
+    radial-gradient(820px 400px at -8% 2%, rgba(29,78,110,.12), transparent 55%),
+    linear-gradient(180deg,#e9f1f7 0%, #f5f8fb 46%, #f1f6fa 100%);
+  min-height:100vh;
+}
+.wrap{max-width:860px; margin:0 auto; padding:26px 18px 48px;}
+
+.hero{
+  position:relative; overflow:hidden; border-radius:22px;
+  background:linear-gradient(125deg,#152f46 0%, #1d4e6e 46%, #0e8a80 128%);
+  color:#fff; padding:30px 28px;
+  box-shadow:0 22px 46px -22px rgba(20,58,86,.55);
+}
+.hero::before{content:""; position:absolute; right:-70px; top:-80px; width:300px; height:300px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.16), transparent 62%);}
+.hero::after{content:""; position:absolute; left:-40px; bottom:-90px; width:220px; height:220px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.07), transparent 62%);}
+.hero-inner{position:relative; z-index:2;}
+.hero .logo{width:54px; height:54px; border-radius:15px; background:linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.06));
+  border:1px solid rgba(255,255,255,.28); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+.hero .logo svg{width:30px; height:30px;}
+.hero h1{font-size:25px; font-weight:800; letter-spacing:.5px;}
+.hero .sub{margin-top:6px; color:rgba(255,255,255,.82); font-size:14px;}
+.hero .chips{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+.chip{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.28);
+  border-radius:999px; padding:6px 13px;}
+.chip .dot{width:8px; height:8px; border-radius:50%; background:#7be8c9; box-shadow:0 0 0 3px rgba(123,232,201,.25);}
+
+.section-title{display:flex; align-items:center; gap:10px; margin:30px 0 15px; font-size:16.5px; font-weight:800;}
+.section-title .bar{width:5px; height:17px; border-radius:3px; background:linear-gradient(180deg,var(--navy),var(--teal));}
+.section-title .en{margin-left:auto; font-size:11px; color:var(--soft); font-weight:600; letter-spacing:1px;}
+
+.entries{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+@media (max-width:640px){ .entries{grid-template-columns:1fr;} }
+.entry{
+  position:relative; background:var(--card); border:1px solid var(--line); border-radius:18px;
+  padding:24px 22px 20px; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  overflow:hidden; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  box-shadow:0 1px 2px rgba(20,50,75,.05);
+}
+.entry::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--navy); opacity:.9;}
+.entry:hover{transform:translateY(-4px); box-shadow:0 20px 40px -20px rgba(20,50,80,.35); border-color:#c7d9e6;}
+.entry.e-teal::before{background:linear-gradient(90deg,var(--teal),#3bb5a9);}
+.entry.e-amber::before{background:linear-gradient(90deg,var(--amber),#e0a03f);}
+.entry .ico{width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+.entry.e-navy .ico{background:linear-gradient(145deg,#e7eef4,#d4e4f0);} .entry.e-navy .ico svg{stroke:var(--navy);}
+.entry.e-teal .ico{background:var(--teal-l);} .entry.e-teal .ico svg{stroke:var(--teal);}
+.entry.e-amber .ico{background:var(--amber-l);} .entry.e-amber .ico svg{stroke:var(--amber);}
+.entry .ico svg{width:27px; height:27px; stroke-width:2; fill:none;}
+.entry h3{font-size:17.5px; font-weight:800; margin-bottom:7px;}
+.entry .desc{color:var(--muted); font-size:13.5px; margin-bottom:16px; flex:1;}
+.entry .go{display:flex; align-items:center; justify-content:center; gap:7px;
+  padding:11px 14px; border-radius:11px; font-size:14px; font-weight:700; color:#fff;}
+.entry.e-navy .go{background:linear-gradient(135deg,var(--navy),#2f6d94);}
+.entry.e-teal .go{background:linear-gradient(135deg,var(--teal),#3bb5a9);}
+.entry.e-amber .go{background:linear-gradient(135deg,var(--amber),#e0a03f);}
+.entry .go svg{width:15px; height:15px; transition:transform .15s ease;}
+.entry:hover .go svg{transform:translateX(3px);}
+.entry.off{opacity:.55; pointer-events:none;}
+
+.infobar{
+  margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px 18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  font-size:13px; color:var(--muted); box-shadow:0 1px 2px rgba(20,50,75,.05);
+}
+.infobar b{color:var(--ink);}
+.infobar svg{width:16px; height:16px; stroke:var(--teal); flex:none;}
+
+.notice{
+  margin-top:18px; border:1px dashed #f0c36d; background:#fffbeb; border-radius:14px;
+  padding:13px 16px; font-size:12.5px; color:#92600a; line-height:1.7;
+}
+.notice b{color:#7c4a03;}
+
+.foot{margin-top:26px; text-align:center; font-size:12px; color:var(--soft); line-height:1.8;}
+.kbd{background:#eef2f7; border:1px solid var(--line); border-radius:6px; padding:1px 7px; font-size:11.5px; color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+        </svg>
+      </div>
+      <h1 id="schoolName">成绩 · 考场查询</h1>
+      <div class="sub" id="heroSub">请输入个人信息查询，数据由教务处统一管理发布</div>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span><span id="chipStatus">数据加载中…</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">查询入口<span class="en">SERVICES</span></div>
+  <div class="entries">
+    <a class="entry e-navy" id="entryGrades" href="成绩查询.html">
+      <div class="ico">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/>
+        </svg>
+      </div>
+      <h3>学生成绩查询</h3>
+      <div class="desc">使用「姓名 + 身份证后4位」登录，查询个人各科成绩、班级与年级排名、历次考试趋势。</div>
+      <span class="go">进入查询
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+    <a class="entry e-amber" id="entrySeats" href="考场查询.html">
+      <div class="ico">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h2M11 9h2M15 9h2M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2M15 17h2"/>
+        </svg>
+      </div>
+      <h3>考场座位查询</h3>
+      <div class="desc">输入姓名或学号，查询各学科考场安排与座位号；也可按考场、按班级浏览完整安排表。</div>
+      <span class="go">进入查询
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+  </div>
+
+  <div class="infobar" id="infoBar" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <span>数据更新时间：<b id="updatedAt">—</b><span id="seatInfo"></span></span>
+  </div>
+
+  <div class="notice" id="fileNotice" style="display:none">
+    <b>提示：</b>当前似乎是直接双击打开的本页面。请通过老师公布的网址访问，或先在本地启动预览服务（见「使用说明」）。
+  </div>
+
+  <div class="foot">
+    本平台由教务处本地管理数据后统一发布 · 不收集任何个人信息<br>
+    如查询结果有疑问，请与本班班主任或教务处老师核对
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  /* 发布时由发布中心注入内嵌数据；为空时回退为在线拉取 data/version.json */
+  var EMBED_DATA = {"version":2,"updatedAt":"2026-10-14T03:29:55.451Z","pubGrades":true,"pubSeats":false,"schoolName":"","gradeName":"高二年级","exams":4,"students":316};
+  function fmtTime(iso){
+    if(!iso) return "—";
+    var d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    function p(n){ return String(n).padStart(2,"0"); }
+    return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  }
+  if(EMBED_DATA){ renderVer(EMBED_DATA); }
+  else {
+    fetch("data/version.json?t=" + Date.now()).then(function(r){
+      if(!r.ok) throw new Error("http "+r.status);
+      return r.json();
+    }).then(renderVer).catch(function(){
+      $("#chipStatus").textContent = "数据读取失败";
+      $("#fileNotice").style.display = "block";
+      $("#updatedAt").textContent = "—";
+      $("#infoBar").style.display = "flex";
+    });
+  }
+  function renderVer(v){
+    if(v.schoolName) $("#schoolName").textContent = v.schoolName + " · 成绩考场查询";
+    var parts = [];
+    if(v.gradeName) parts.push(v.gradeName);
+    if(v.pubGrades && v.exams) parts.push("成绩数据 " + v.exams + " 次考试 / " + v.students + " 人");
+    if(v.pubSeats && v.seat && v.seat.label) parts.push("考场安排：" + v.seat.label);
+    $("#heroSub").textContent = parts.length ? parts.join(" · ") : "请输入个人信息查询，数据由教务处统一管理发布";
+    $("#chipStatus").textContent = "数据正常 · 更新于 " + fmtTime(v.updatedAt);
+    $("#updatedAt").textContent = fmtTime(v.updatedAt);
+    if(v.pubSeats && v.seat && v.seat.label){
+      $("#seatInfo").textContent = " · 考场安排：" + v.seat.label + "（" + (v.seat.count||0) + " 人）";
+    }
+    $("#infoBar").style.display = "flex";
+    if(v.pubGrades === false){
+      var g = $("#entryGrades");
+      g.classList.add("off");
+      g.removeAttribute("href");
+      g.querySelector(".desc").textContent = "成绩查询功能暂未开放，请咨询教务处老师。";
+    }
+    if(v.pubSeats === false){
+      var s = $("#entrySeats");
+      s.classList.add("off");
+      s.removeAttribute("href");
+      s.querySelector(".desc").textContent = "考场查询功能暂未开放，请咨询教务处老师。";
+    }
+  }
+})();
+</script>
+</body>
+</html>

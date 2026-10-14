@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考场座位查询</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23c7761a'/%3E%3Crect x='14' y='16' width='36' height='32' rx='4' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M22 26h4M30 26h4M38 26h4M22 34h4M30 34h4M38 34h4M22 42h4M30 42h4M38 42h4' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f8fb; --card:#ffffff; --border:#e2e8f0;
+  --exam:#dc2626; --exam-bg:#fef2f2; --exam-line:#fecaca;
+  --study:#16a34a; --study-bg:#f0fdf4; --study-line:#bbf7d0;
+  --primary:#1d4ed8; --primary-light:#dbeafe;
+  --text:#1e293b; --muted:#64748b; --text-lite:#94a3b8;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit;font-size:14px;color:var(--text)}
+.hidden{display:none!important}
+
+.wrap{max-width:1060px;margin:0 auto;padding:18px 16px 60px}
+
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.topbar h1{font-size:19px;font-weight:800;display:flex;align-items:center;gap:9px}
+.topbar h1 .tico{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#c7761a,#e0a03f);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.topbar h1 .tico svg{width:19px;height:19px}
+.topbar .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:#fff;color:var(--text);
+  padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.btn svg{width:14px;height:14px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+
+/* 视图切换 */
+.view-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:5px;background:#eef2f7;border-radius:10px;border:1px solid var(--border)}
+.view-tabs button{padding:8px 16px;border:0;background:transparent;color:#475569;border-radius:7px;font-size:13px;cursor:pointer;transition:.15s;font-weight:500}
+.view-tabs button:hover{background:#e2e8f0;color:var(--text)}
+.view-tabs button.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,.3)}
+
+/* 搜索 */
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-row input{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;outline:none;transition:.15s;background:#fff}
+.search-row input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(29,78,216,.12)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600}
+.btn-primary:hover{background:#1e40af;color:#fff}
+
+/* 学生查询结果 */
+.stu-card{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.stu-head{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;padding:14px 18px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stu-head .nm{font-size:18px;font-weight:700}
+.stu-head .info{font-size:12.5px;opacity:.85}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+table.tbl th{background:#f8fafc;color:var(--muted);font-weight:600;text-align:center;padding:9px 12px;border-bottom:2px solid var(--border);white-space:nowrap}
+table.tbl td{padding:8px 12px;border-bottom:1px solid #f1f5f9;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums}
+table.tbl tr:last-child td{border-bottom:0}
+table.tbl tr:hover td{background:#f8fafc}
+table.tbl td.l{text-align:left}
+.tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.type-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:600}
+.type-badge.xk{background:var(--exam-bg);color:var(--exam);border:1px solid var(--exam-line)}
+.type-badge.zx{background:var(--study-bg);color:var(--study);border:1px solid var(--study-line)}
+.room-no{font-weight:700;font-size:14px}
+.empty{padding:36px;text-align:center;color:var(--text-lite);font-size:13px}
+
+/* 考场视图 */
+.subj-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.subj-tabs button{border:1px solid var(--border);background:#fff;color:#475569;border-radius:999px;padding:6px 14px;font-size:12.5px;cursor:pointer;transition:.15s;font-weight:500}
+.subj-tabs button:hover{border-color:#93c5fd;background:#eff6ff;color:var(--primary)}
+.subj-tabs button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:14px}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend .sw.xk{background:var(--exam-bg);border:1px solid var(--exam)}
+.legend .sw.zx{background:var(--study-bg);border:1px solid var(--study)}
+
+.room{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.room-h{padding:10px 14px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.room-h .cnt{font-size:11.5px;font-weight:500;opacity:.8}
+.room.xk .room-h{background:var(--exam-bg);color:var(--exam);border-bottom:1px solid var(--exam-line)}
+.room.zx .room-h{background:var(--study-bg);color:var(--study);border-bottom:1px solid var(--study-line)}
+.seat-grid{display:grid;gap:6px;padding:12px}
+.seat{border:1px solid var(--border);border-radius:8px;padding:7px 4px 6px;text-align:center;background:#fff;min-width:0}
+.seat .no{font-size:10px;color:var(--text-lite);line-height:1.3}
+.seat .nm{font-size:12.5px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat .sn{font-size:10px;color:var(--text-lite);line-height:1.3}
+.room.xk .seat{border-color:var(--exam-line)}
+.room.zx .seat{border-color:var(--study-line)}
+
+/* 班级视图 */
+.cls-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cls-pills button{border:1px solid var(--border);background:#fff;color:#475569;border-radius:999px;padding:6px 13px;font-size:12.5px;cursor:pointer;transition:.15s}
+.cls-pills button:hover{border-color:#93c5fd;background:#eff6ff;color:var(--primary)}
+.cls-pills button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  .card,.room{box-shadow:none;break-inside:avoid}
+  .wrap{max-width:100%}
+  .room{margin-bottom:8px}
+}
+@media (max-width:640px){
+  .topbar h1{font-size:17px}
+  .card{padding:14px 14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>
+        <span class="tico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h2M11 9h2M15 9h2M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2M15 17h2"/>
+          </svg>
+        </span>
+        考场座位查询
+      </h1>
+      <div class="meta" id="dataMeta">数据加载中…</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn no-print" id="btnPrint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      打印
+    </button>
+  </div>
+
+  <div class="view-tabs no-print" id="viewTabs">
+    <button data-v="stu" class="active">学生查询</button>
+    <button data-v="room">按考场座位</button>
+    <button data-v="class">按班级总表</button>
+  </div>
+
+  <!-- 学生查询 -->
+  <div class="card" id="viewStu">
+    <div class="card-title">查询我的考场</div>
+    <div class="card-sub">输入学生姓名或学号，查询各学科考场与座位号（红色 = 学考考场，绿色 = 自习考场）</div>
+    <div class="search-row">
+      <input type="text" id="stuQuery" placeholder="输入学生姓名或学号，回车查询">
+      <button class="btn-primary" id="btnQuery">查 询</button>
+    </div>
+    <div id="stuResult" style="margin-top:14px"></div>
+  </div>
+
+  <!-- 按考场 -->
+  <div class="card hidden" id="viewRoom">
+    <div class="card-title">按考场座位<span class="small muted" id="roomSettingBrief"></span></div>
+    <div class="card-sub">适合监考老师使用；可按科目筛选</div>
+    <div class="subj-tabs no-print" id="subjTabs"></div>
+    <div class="legend no-print">
+      <span><span class="sw xk"></span>学考考场</span>
+      <span><span class="sw zx"></span>自习考场</span>
+    </div>
+    <div id="roomResult"></div>
+  </div>
+
+  <!-- 按班级 -->
+  <div class="card hidden" id="viewClass">
+    <div class="card-title">按班级总表</div>
+    <div class="card-sub">适合班主任与学生查看；各行显示该生各科考场 / 座位</div>
+    <div class="cls-pills no-print" id="clsPills"></div>
+    <div class="tbl-wrap"><table class="tbl" id="clsTable"></table></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $ = function(s){ return document.querySelector(s); };
+/* 发布时由发布中心注入内嵌数据；为空时回退为在线拉取 data/seats.json */
+var EMBED_DATA = null;
+var SUBJECTS = ["语文","数学","英语","物理","化学","生物","政治","历史","地理"];
+var D = null;             // seats.json
+var BY_ID = {};           // 学生id -> 学生
+var VIEW = "stu";
+var ACTIVE_SUBJ = "all";
+var ACTIVE_CLS = "all";
+
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function pad(n){ return String(n).padStart(2,"0"); }
+function fmtTime(t){
+  if(!t) return "";
+  var d = new Date(t);
+  function p(n){ return String(n).padStart(2,"0"); }
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+}
+function subjData(su){
+  // 优先使用排位系统导出格式（result 内嵌），兼容科目在顶层的旧格式
+  if(D.result && D.result[su]) return D.result[su];
+  if(D[su] && (D[su].xk || D[su].zx)) return D[su];
+  return null;
+}
+function subjectsWithData(){
+  return SUBJECTS.filter(function(s){ return !!subjData(s); });
+}
+function seatOf(studentId, subject){
+  var g = subjData(subject);
+  if(!g) return null;
+  var i, r, j;
+  for(i=0;i<(g.xk||[]).length;i++){
+    r = g.xk[i];
+    for(j=0;j<r.seats.length;j++) if(r.seats[j][0]===studentId) return {type:"xk", room:r.lab, seat:r.seats[j][1]};
+  }
+  for(i=0;i<(g.zx||[]).length;i++){
+    r = g.zx[i];
+    for(j=0;j<r.seats.length;j++) if(r.seats[j][0]===studentId) return {type:"zx", room:r.lab, seat:r.seats[j][1]};
+  }
+  return null;
+}
+function classList(){
+  var seen = {}, out = [];
+  (D.students||[]).forEach(function(s){
+    var c = s.className || "未分班";
+    if(!seen[c]){ seen[c]=1; out.push(c); }
+  });
+  return out;
+}
+
+/* ---------- 视图切换 ---------- */
+function switchView(v){
+  VIEW = v;
+  Array.prototype.forEach.call(document.querySelectorAll("#viewTabs button"), function(b){
+    b.classList.toggle("active", b.getAttribute("data-v")===v);
+  });
+  $("#viewStu").classList.toggle("hidden", v!=="stu");
+  $("#viewRoom").classList.toggle("hidden", v!=="room");
+  $("#viewClass").classList.toggle("hidden", v!=="class");
+  if(v==="room") renderRoom();
+  if(v==="class") renderClass();
+}
+
+/* ---------- 学生查询 ---------- */
+function doQuery(){
+  var q = $("#stuQuery").value.trim();
+  var box = $("#stuResult");
+  if(!q){ box.innerHTML = ""; return; }
+  var stu = null;
+  var list = (D.students||[]).filter(function(s){
+    return s.name===q || (s.stuNo && s.stuNo===q) || s.id===q;
+  });
+  if(!list.length){
+    // 姓名包含匹配（防止同名/简称）
+    list = (D.students||[]).filter(function(s){ return s.name.indexOf(q)>=0; });
+  }
+  if(!list.length){
+    box.innerHTML = '<div class="empty">未找到「' + esc(q) + '」对应的学生，请检查姓名或学号后重试</div>';
+    return;
+  }
+  if(list.length>1){
+    var opts = list.map(function(s,i){
+      return '<button class="btn" data-i="'+i+'" style="margin:0 8px 8px 0">'+esc(s.name)+'（'+esc(s.className||"")+' · '+esc(s.stuNo||"")+'）</button>';
+    }).join("");
+    box.innerHTML = '<div class="card-sub">找到多名匹配学生，请点击选择：</div><div>'+opts+'</div>';
+    Array.prototype.forEach.call(box.querySelectorAll("button"), function(b){
+      b.onclick = function(){ showStudent(list[+b.getAttribute("data-i")]); };
+    });
+    return;
+  }
+  showStudent(list[0]);
+}
+function showStudent(stu){
+  var subs = subjectsWithData();
+  var rows = [];
+  subs.forEach(function(su){
+    var r = seatOf(stu.id, su);
+    if(r) rows.push({su:su, r:r});
+  });
+  var html = '<div class="stu-card"><div class="stu-head">'
+    + '<span class="nm">' + esc(stu.name) + '</span>'
+    + '<span class="info">' + esc(stu.className||"") + (stu.combo ? " · " + esc(stu.combo) : "") + (stu.stuNo ? " · 学号 " + esc(stu.stuNo) : "") + '</span>'
+    + '</div>';
+  if(!rows.length){
+    html += '<div class="empty">该学生暂无考场安排</div>';
+  } else {
+    html += '<div class="tbl-wrap" style="border:0"><table class="tbl"><thead><tr><th class="l">科目</th><th>考试类型</th><th>考场</th><th>座位号</th></tr></thead><tbody>';
+    rows.forEach(function(row){
+      html += "<tr><td class='l'>" + esc(row.su) + "</td>"
+        + "<td><span class='type-badge " + row.r.type + "'>" + (row.r.type==="xk" ? "学考" : "自习") + "</span></td>"
+        + "<td><span class='room-no'>" + esc(row.r.room) + "</span></td>"
+        + "<td><span class='room-no'>" + esc(row.r.seat) + " 号</span></td></tr>";
+    });
+    html += "</tbody></table></div>";
+  }
+  html += '</div>';
+  $("#stuResult").innerHTML = html;
+}
+
+/* ---------- 按考场 ---------- */
+function renderRoom(){
+  var subs = subjectsWithData();
+  if(!subs.length){ $("#roomResult").innerHTML = '<div class="empty">暂无考场安排数据</div>'; return; }
+  if(ACTIVE_SUBJ!=="all" && subs.indexOf(ACTIVE_SUBJ)<0) ACTIVE_SUBJ = "all";
+  var tabs = '<button data-s="all" class="' + (ACTIVE_SUBJ==="all"?"active":"") + '">全部科目</button>'
+    + subs.map(function(s){
+        var m = (D.meta||{})[s] || {};
+        var cnt = s==="语文"||s==="数学"||s==="英语"
+          ? "（" + (m.xk||0) + "人）"
+          : "（学考" + (m.xk||0) + " / 自习" + (m.zx||0) + "）";
+        return '<button data-s="' + esc(s) + '" class="' + (ACTIVE_SUBJ===s?"active":"") + '">' + esc(s) + cnt + '</button>';
+      }).join("");
+  $("#subjTabs").innerHTML = tabs;
+  Array.prototype.forEach.call(document.querySelectorAll("#subjTabs button"), function(b){
+    b.onclick = function(){ ACTIVE_SUBJ = b.getAttribute("data-s"); renderRoom(); };
+  });
+  var st = D.settings || {};
+  $("#roomSettingBrief").textContent = (st.mode==="random"?"随机排位":"按班级排位") + " · 每室 " + (st.capacity||"—") + " 人 · 每行 " + (st.cols||"—") + " 座" + (st.snake?" · 蛇形排列":"");
+  var list = ACTIVE_SUBJ==="all" ? subs : [ACTIVE_SUBJ];
+  var cols = st.cols || 5;
+  var html = "";
+  list.forEach(function(su){
+    var g = subjData(su);
+    if(!g) return;
+    html += '<div style="margin-bottom:20px"><div style="font-size:15px;font-weight:700;margin-bottom:10px">' + esc(su) + '</div>';
+    ["xk","zx"].forEach(function(t){
+      var rooms = (g[t]||[]);
+      if(!rooms.length) return;
+      var m = (D.meta||{})[su] || {};
+      html += '<div class="small muted" style="margin:8px 0 6px">' + (t==="xk" ? "学考考场（" + (m.xk||0) + " 人 · " + rooms.length + " 间）" : "自习考场（" + (m.zx||0) + " 人 · " + rooms.length + " 间）") + '</div>';
+      rooms.forEach(function(r){
+        html += '<div class="room ' + t + '"><div class="room-h">考场 ' + esc(r.lab) + '<span class="cnt">' + r.seats.length + ' 人</span></div>';
+        html += '<div class="seat-grid" style="grid-template-columns:repeat(' + cols + ',1fr)">';
+        r.seats.forEach(function(pair){
+          var s = BY_ID[pair[0]] || {name:"?"+pair[0], stuNo:""};
+          html += '<div class="seat"><div class="no">' + esc(pair[1]) + ' 号</div><div class="nm">' + esc(s.name) + '</div><div class="sn">' + esc(s.stuNo||"") + '</div></div>';
+        });
+        html += '</div></div>';
+      });
+    });
+    html += '</div>';
+  });
+  $("#roomResult").innerHTML = html;
+}
+
+/* ---------- 按班级 ---------- */
+function renderClass(){
+  var cls = classList();
+  if(ACTIVE_CLS!=="all" && cls.indexOf(ACTIVE_CLS)<0) ACTIVE_CLS = "all";
+  var pills = '<button data-c="all" class="' + (ACTIVE_CLS==="all"?"active":"") + '">全部班级</button>'
+    + cls.map(function(c){ return '<button data-c="' + esc(c) + '" class="' + (ACTIVE_CLS===c?"active":"") + '">' + esc(c) + '</button>'; }).join("");
+  $("#clsPills").innerHTML = pills;
+  Array.prototype.forEach.call(document.querySelectorAll("#clsPills button"), function(b){
+    b.onclick = function(){ ACTIVE_CLS = b.getAttribute("data-c"); renderClass(); };
+  });
+  var subs = subjectsWithData();
+  var stus = (D.students||[]).filter(function(s){ return ACTIVE_CLS==="all" || (s.className||"未分班")===ACTIVE_CLS; });
+  var html = '<thead><tr><th>姓名</th><th>学号</th><th>班级</th><th>选科</th>'
+    + subs.map(function(s){ return "<th>" + esc(s) + "</th>"; }).join("")
+    + '</tr></thead><tbody>';
+  stus.forEach(function(s){
+    html += "<tr><td style='font-weight:600'>" + esc(s.name) + "</td><td>" + esc(s.stuNo||"—") + "</td><td>" + esc(s.className||"—") + "</td><td>" + esc(s.combo||"—") + "</td>";
+    subs.forEach(function(su){
+      var r = seatOf(s.id, su);
+      if(!r){ html += "<td class='muted'>—</td>"; return; }
+      html += "<td><span class='type-badge " + r.type + "'>" + (r.type==="xk"?"学":"自") + "</span> " + esc(r.room) + " · " + esc(r.seat) + "号</td>";
+    });
+    html += "</tr>";
+  });
+  html += "</tbody>";
+  $("#clsTable").innerHTML = html;
+}
+
+/* ---------- 事件 ---------- */
+Array.prototype.forEach.call(document.querySelectorAll("#viewTabs button"), function(b){
+  b.onclick = function(){ switchView(b.getAttribute("data-v")); };
+});
+$("#btnQuery").onclick = doQuery;
+$("#stuQuery").addEventListener("keydown", function(ev){ if(ev.key==="Enter") doQuery(); });
+$("#btnPrint").onclick = function(){ window.print(); };
+
+/* ---------- 启动 ---------- */
+function boot(d){
+  D = d;
+  (D.students||[]).forEach(function(s){ BY_ID[s.id] = s; });
+  var m = (D.settings && D.settings.examYear) ? D.settings.examYear + "年" : "";
+  $("#dataMeta").textContent = (D.label || "考场安排") + " · 共 " + (D.count||(D.students||[]).length) + " 人 · 更新于 " + fmtTime(D.time || D.updatedAt);
+  document.title = (D.label || "考场座位查询");
+}
+if(EMBED_DATA){
+  boot(EMBED_DATA);
+} else {
+  fetch("data/seats.json?t=" + Date.now()).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(boot).catch(function(err){
+    $("#dataMeta").textContent = "数据加载失败";
+    $("#stuResult").innerHTML = '<div class="empty">考场数据暂时无法读取（' + esc(err.message||err) + '），请稍后重试或联系老师</div>';
+  });
+}
+})();
+</script>
+</body>
+</html>
